@@ -1,0 +1,51 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
+
+export interface Panel {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  lastCheckedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+@Injectable({ providedIn: 'root' })
+export class PanelService {
+  private readonly baseUrl = `${environment.apiUrl}/panels`;
+
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<Panel[]> {
+    return this.http
+      .get<ApiResponse<Panel[]>>(this.baseUrl)
+      .pipe(map((res) => res.data));
+  }
+
+  getById(id: string): Observable<Panel> {
+    return this.http
+      .get<ApiResponse<Panel>>(`${this.baseUrl}/${id}`)
+      .pipe(map((res) => res.data));
+  }
+
+  check(id: string): Observable<Panel> {
+    return this.http
+      .post<ApiResponse<Panel>>(`${this.baseUrl}/${id}/check`, {})
+      .pipe(map((res) => res.data));
+  }
+
+  create(panel: { name: string; latitude: number; longitude: number }): Observable<Panel> {
+    return this.http
+      .post<ApiResponse<Panel>>(this.baseUrl, panel)
+      .pipe(map((res) => res.data));
+  }
+}

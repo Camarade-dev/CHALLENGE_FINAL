@@ -37,3 +37,19 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 CREATE INDEX IF NOT EXISTS idx_reports_coords ON reports(latitude, longitude);
+
+-- ---------------------------------------------------------------------------
+-- Panneaux de la ville (contrôle / dernier check)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS panels (
+  id              TEXT PRIMARY KEY,
+  name            TEXT NOT NULL,
+  latitude        DOUBLE PRECISION NOT NULL,
+  longitude       DOUBLE PRECISION NOT NULL,
+  last_checked_at TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_panels_coords ON panels(latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_panels_last_checked ON panels(last_checked_at);

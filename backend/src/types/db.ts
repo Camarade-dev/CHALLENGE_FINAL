@@ -42,3 +42,13 @@ export interface Report {
 export interface ReportWithUser extends Report {
   user: UserPublic;
 }
+
+export interface Panel {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  lastCheckedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
