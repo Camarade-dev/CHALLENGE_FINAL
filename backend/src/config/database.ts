@@ -1,19 +1,30 @@
 /**
  * Couche d'accès PostgreSQL : pool de connexions et helper de requêtes.
  * Pas d'ORM — requêtes SQL manuelles via pg.
+ *
+ * Supabase : utilise DATABASE_POOLER_URL (Session Pooler, port 6543) de préférence
+ * pour éviter de saturer les connexions directes (port 5432).
  */
 
 import { Pool, QueryResultRow } from "pg";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString =
+  process.env.DATABASE_POOLER_URL ?? process.env.DATABASE_URL;
 if (!connectionString) {
-  throw new Error("DATABASE_URL doit être défini dans .env");
+  throw new Error(
+    "DATABASE_URL ou DATABASE_POOLER_URL doit être défini dans .env"
+  );
 }
 
 const pool = new Pool({
   connectionString,
   max: 10,
   idleTimeoutMillis: 30000,
+  ssl:
+    connectionString.includes("supabase.co") ||
+    connectionString.includes("neon.tech")
+      ? { rejectUnauthorized: false }
+      : undefined,
 });
 
 /**
