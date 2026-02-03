@@ -35,12 +35,21 @@ export function errorHandler(
     return;
   }
 
-  // Erreur générique (ne pas exposer les détails en production)
+  // Déballer AggregateError (pg-pool peut regrouper plusieurs erreurs)
+  const raw = err as Error & { errors?: Error[] };
+  const firstCause = Array.isArray(raw.errors)?.[0];
+  const causeMessage = firstCause?.message ?? err.message;
+  const fullMessage = causeMessage || (firstCause ? String(firstCause) : err.stack || "Erreur inconnue");
+
+  console.error("[API Error]", causeMessage || err.message);
+  if (firstCause?.stack) console.error(firstCause.stack);
+  else if (process.env.NODE_ENV !== "production" && err.stack) console.error(err.stack);
+
   const statusCode = 500;
   const message =
     process.env.NODE_ENV === "production"
       ? "Erreur interne du serveur"
-      : err.message;
+      : fullMessage;
 
   res.status(statusCode).json({
     success: false,

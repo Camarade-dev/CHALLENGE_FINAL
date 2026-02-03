@@ -53,3 +53,19 @@ CREATE TABLE IF NOT EXISTS panels (
 
 CREATE INDEX IF NOT EXISTS idx_panels_coords ON panels(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_panels_last_checked ON panels(last_checked_at);
+
+-- Historique des contrôles (formulaire : état, commentaire, photo)
+-- status : PENDING = soumis par utilisateur (en cours de vérification), VALIDATED = validé par admin
+CREATE TABLE IF NOT EXISTS panel_checks (
+  id         TEXT PRIMARY KEY,
+  panel_id   TEXT NOT NULL REFERENCES panels(id) ON DELETE CASCADE,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  status     TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'VALIDATED')),
+  state      TEXT NOT NULL CHECK (state IN ('OK', 'DAMAGED', 'MISSING', 'OTHER')),
+  comment    TEXT,
+  photo_url  TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_panel_checks_panel_id ON panel_checks(panel_id);
+CREATE INDEX IF NOT EXISTS idx_panel_checks_checked_at ON panel_checks(checked_at);
+CREATE INDEX IF NOT EXISTS idx_panel_checks_status ON panel_checks(status);

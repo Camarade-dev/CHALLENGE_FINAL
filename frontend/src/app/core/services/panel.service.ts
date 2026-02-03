@@ -37,9 +37,9 @@ export class PanelService {
       .pipe(map((res) => res.data));
   }
 
-  check(id: string): Observable<Panel> {
+  check(id: string, body: { state: string; comment?: string; photoUrl?: string | null }): Observable<Panel> {
     return this.http
-      .post<ApiResponse<Panel>>(`${this.baseUrl}/${id}/check`, {})
+      .post<ApiResponse<Panel>>(`${this.baseUrl}/${id}/check`, body)
       .pipe(map((res) => res.data));
   }
 
@@ -48,4 +48,45 @@ export class PanelService {
       .post<ApiResponse<Panel>>(this.baseUrl, panel)
       .pipe(map((res) => res.data));
   }
+
+  update(id: string, data: Partial<{ name: string; latitude: number; longitude: number }>): Observable<Panel> {
+    return this.http
+      .patch<ApiResponse<Panel>>(`${this.baseUrl}/${id}`, data)
+      .pipe(map((res) => res.data));
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete(`${this.baseUrl}/${id}`).pipe(map(() => undefined));
+  }
+
+  getPendingChecks(): Observable<PendingCheck[]> {
+    return this.http
+      .get<ApiResponse<PendingCheck[]>>(`${this.baseUrl}/checks/pending`)
+      .pipe(map((res) => res.data));
+  }
+
+  getMyPendingPanelIds(): Observable<string[]> {
+    return this.http
+      .get<ApiResponse<string[]>>(`${this.baseUrl}/checks/my-pending`)
+      .pipe(map((res) => res.data));
+  }
+
+  validateCheck(checkId: string): Observable<Panel> {
+    return this.http
+      .patch<ApiResponse<Panel>>(`${this.baseUrl}/checks/${checkId}/validate`, {})
+      .pipe(map((res) => res.data));
+  }
+}
+
+export interface PendingCheck {
+  id: string;
+  panelId: string;
+  userId: string;
+  checkedAt: string;
+  status: string;
+  state: string;
+  comment: string | null;
+  photoUrl: string | null;
+  panelName: string;
+  userEmail: string;
 }

@@ -10,6 +10,7 @@ import {
   updatePanelSchema,
   panelIdParamSchema,
   checkPanelSchema,
+  checkIdParamSchema,
 } from "../dto/panel.dto";
 import { validate } from "../middlewares/validate";
 
@@ -34,13 +35,29 @@ async function update(req: Request, res: Response): Promise<void> {
 }
 
 async function check(req: Request, res: Response): Promise<void> {
-  const panel = await panelService.check(req.params.id);
+  const userId = req.user!.userId;
+  const panel = await panelService.check(req.params.id, userId, req.body);
   res.json({ success: true, data: panel });
 }
 
 async function remove(req: Request, res: Response): Promise<void> {
   const result = await panelService.delete(req.params.id);
   res.json({ success: true, data: result });
+}
+
+async function listPendingChecks(_req: Request, res: Response): Promise<void> {
+  const checks = await panelService.findPendingChecks();
+  res.json({ success: true, data: checks });
+}
+
+async function listMyPendingPanelIds(req: Request, res: Response): Promise<void> {
+  const ids = await panelService.findMyPendingCheckPanelIds(req.user!.userId);
+  res.json({ success: true, data: ids });
+}
+
+async function validateCheck(req: Request, res: Response): Promise<void> {
+  const panel = await panelService.validateCheck(req.params.id);
+  res.json({ success: true, data: panel });
 }
 
 export const panelController = {
@@ -50,6 +67,9 @@ export const panelController = {
   update: asyncHandler(update),
   check: asyncHandler(check),
   remove: asyncHandler(remove),
+  listPendingChecks: asyncHandler(listPendingChecks),
+  listMyPendingPanelIds: asyncHandler(listMyPendingPanelIds),
+  validateCheck: asyncHandler(validateCheck),
 };
 
 export const panelValidation = {
@@ -57,4 +77,5 @@ export const panelValidation = {
   update: validate(updatePanelSchema),
   idParam: validate(panelIdParamSchema),
   check: validate(checkPanelSchema),
+  checkIdParam: validate(checkIdParamSchema),
 };

@@ -52,3 +52,21 @@ export interface Panel {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type PanelCheckStatus = "PENDING" | "VALIDATED";
+
+export interface PanelCheck {
+  id: string;
+  panelId: string;
+  userId: string;
+  checkedAt: Date;
+  status: PanelCheckStatus;
+  state: string;
+  comment: string | null;
+  photoUrl: string | null;
+}
+
+export interface PanelCheckWithDetails extends PanelCheck {
+  panelName: string;
+  userEmail: string;
+}

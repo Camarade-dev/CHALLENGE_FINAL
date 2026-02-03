@@ -26,11 +26,25 @@ export const panelIdParamSchema = z.object({
   }),
 });
 
+const checkStateEnum = z.enum(["OK", "DAMAGED", "MISSING", "OTHER"]);
+
 export const checkPanelSchema = z.object({
   params: z.object({
     id: z.string().min(1, "ID du panneau requis"),
+  }),
+  body: z.object({
+    state: checkStateEnum,
+    comment: z.string().max(2000).optional(),
+    photoUrl: z.string().url().optional().nullable(),
+  }),
+});
+
+export const checkIdParamSchema = z.object({
+  params: z.object({
+    id: z.string().min(1, "ID du contrôle requis"),
   }),
 });
 
 export type CreatePanelDto = z.infer<typeof createPanelSchema>["body"];
 export type UpdatePanelDto = z.infer<typeof updatePanelSchema>["body"];
+export type CheckPanelDto = z.infer<typeof checkPanelSchema>["body"];

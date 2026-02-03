@@ -16,15 +16,16 @@ if (!connectionString) {
   );
 }
 
+const needsSSL =
+  connectionString.includes("supabase.co") ||
+  connectionString.includes("pooler.supabase.com") ||
+  connectionString.includes("neon.tech");
+
 const pool = new Pool({
   connectionString,
   max: 10,
   idleTimeoutMillis: 30000,
-  ssl:
-    connectionString.includes("supabase.co") ||
-    connectionString.includes("neon.tech")
-      ? { rejectUnauthorized: false }
-      : undefined,
+  ssl: needsSSL ? { rejectUnauthorized: false } : undefined,
 });
 
 /**
