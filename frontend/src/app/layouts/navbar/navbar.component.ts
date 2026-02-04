@@ -44,23 +44,25 @@ import { AuthService } from '../../core/services/auth.service';
     .brand {
       font-weight: 700;
       font-size: 1.25rem;
-      color: #eee;
+      color: #ffffff;
       text-decoration: none;
     }
-    .brand:hover, .nav-links a:hover { color: #fff; }
+    .brand:hover, .nav-links a:hover { transition-delay: 0.3s, color: #000000; }
     .nav-links {
       display: flex;
       align-items: center;
       gap: 1rem;
       list-style: none;
       margin: 0;
-      padding: 0;
+      padding: 0
+  
     }
     .nav-links a {
-      color: #ccc;
+      color: #ffffff;
       text-decoration: none;
       padding: 0.35rem 0.75rem;
       border-radius: 6px;
+      transition: color 0.6s ease;
     }
     .nav-links a.active { color: #7c3aed; background: rgba(124,58,237,0.15); }
     .user { display: flex; align-items: center; gap: 0.75rem; }
@@ -68,13 +70,13 @@ import { AuthService } from '../../core/services/auth.service';
     .btn-logout {
       padding: 0.35rem 0.75rem;
       background: transparent;
-      color: #ccc;
+      color: #ffffff;
       border: 1px solid #555;
       border-radius: 6px;
       cursor: pointer;
       font-size: 0.875rem;
     }
-    .btn-logout:hover { color: #fff; border-color: #777; }
+    .btn-logout:hover { color: #ffffff; border-color: #777; }
   `],
 })
 export class NavbarComponent {
