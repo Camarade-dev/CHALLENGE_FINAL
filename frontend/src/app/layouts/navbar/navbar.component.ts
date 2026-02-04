@@ -37,7 +37,7 @@ import { AuthService } from '../../core/services/auth.service';
       align-items: center;
       justify-content: space-between;
       padding: 0.75rem 1.5rem;
-      background: #1a1a2e;
+      background: red;
       color: #eee;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
