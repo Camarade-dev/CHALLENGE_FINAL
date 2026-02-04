@@ -4,3 +4,11 @@
   margin-left: 20px;     /* optionnel */
   max-height: 80px;      /* optionnel : taille contrôlée */
 }
+
+.app-root {
+  min-height: 100vh;
+  background-image: url("assets/background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

@@ -3,3 +3,18 @@
 * {
     font-family: 'Lato';
 }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  min-height: 100vh;
+  background-image: url("assets/background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

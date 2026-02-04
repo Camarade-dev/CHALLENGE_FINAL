@@ -47,7 +47,7 @@ import { AuthService } from '../../core/services/auth.service';
       color: #ffffff;
       text-decoration: none;
     }
-    .brand:hover, .nav-links a:hover { transition-delay: 0.3s, color: #000000; }
+    .brand:hover, .nav-links a:hover { transition-delay: 0.3s; color: #000000; }
     .nav-links {
       display: flex;
       align-items: center;
