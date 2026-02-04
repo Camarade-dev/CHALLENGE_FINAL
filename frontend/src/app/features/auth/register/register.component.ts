@@ -47,7 +47,7 @@ import { AuthService } from '../../../core/services/auth.service';
     button {
       width: 100%;
       padding: 0.6rem;
-      background: #7c3aed;
+      background: darkred;
       color: #fff;
       border: none;
       border-radius: 8px;
