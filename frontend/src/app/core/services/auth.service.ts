@@ -99,9 +99,14 @@ export class AuthService {
     }
   }
 
-  register(email: string, password: string, name?: string): Observable<AuthUser> {
+  register(
+    email: string,
+    password: string,
+    options?: { name?: string; firstName?: string; lastName?: string; age?: number | null }
+  ): Observable<AuthUser> {
+    const body = { email, password, ...options };
     return this.http
-      .post<LoginResponse>(`${this.baseUrl}/register`, { email, password, name })
+      .post<LoginResponse>(`${this.baseUrl}/register`, body)
       .pipe(
         tap((res) => {
           if (res.success) {

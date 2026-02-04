@@ -5,6 +5,7 @@
 
 import { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { MulterError } from "multer";
 import { AppError } from "../utils/errors";
 
 export function errorHandler(
@@ -13,6 +14,18 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
+  // Erreur Multer (upload)
+  if (err instanceof MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "Fichier trop volumineux (max 5 Mo)"
+        : err.code === "LIMIT_UNEXPECTED_FILE"
+          ? "Champ de fichier incorrect (utilisez 'photo')"
+          : err.message;
+    res.status(400).json({ success: false, code: "UPLOAD_ERROR", message });
+    return;
+  }
+
   // Erreur métier (AppError)
   if (err instanceof AppError) {
     res.status(err.statusCode).json({

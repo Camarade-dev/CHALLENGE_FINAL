@@ -23,8 +23,20 @@ import { AuthService } from '../../../core/services/auth.service';
           <input type="password" name="password" [(ngModel)]="password" required minlength="6" />
         </label>
         <label>
-          Nom (optionnel)
-          <input type="text" name="name" [(ngModel)]="name" />
+          Prénom (optionnel)
+          <input type="text" name="firstName" [(ngModel)]="firstName" maxlength="100" />
+        </label>
+        <label>
+          Nom de famille (optionnel)
+          <input type="text" name="lastName" [(ngModel)]="lastName" maxlength="100" />
+        </label>
+        <label>
+          Âge (optionnel)
+          <input type="number" name="age" [(ngModel)]="age" min="0" max="150" placeholder="Ex. 25" />
+        </label>
+        <label>
+          Nom d'affichage (optionnel, sinon prénom + nom)
+          <input type="text" name="name" [(ngModel)]="name" maxlength="200" />
         </label>
         <button type="submit" [disabled]="f.invalid || loading">Créer le compte</button>
       </form>
@@ -63,6 +75,9 @@ export class RegisterComponent {
   email = '';
   password = '';
   name = '';
+  firstName = '';
+  lastName = '';
+  age: number | null = null;
   loading = false;
   error = '';
 
@@ -74,7 +89,14 @@ export class RegisterComponent {
   onSubmit(): void {
     this.error = '';
     this.loading = true;
-    this.auth.register(this.email, this.password, this.name || undefined).subscribe({
+    const ageNum = this.age != null ? Number(this.age) : NaN;
+    const ageVal = !Number.isNaN(ageNum) && ageNum >= 0 && ageNum <= 150 ? ageNum : undefined;
+    this.auth.register(this.email, this.password, {
+      name: this.name || undefined,
+      firstName: this.firstName || undefined,
+      lastName: this.lastName || undefined,
+      age: ageVal,
+    }).subscribe({
       next: () => this.router.navigate(['/']),
       error: (err) => {
         this.loading = false;

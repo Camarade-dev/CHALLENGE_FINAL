@@ -77,13 +77,18 @@ export const userService = {
     const emailNorm = data.email.toLowerCase().trim();
     const isMelMember = role === "ADMIN";
 
+    const displayName = data.name?.trim() || [data.firstName, data.lastName].filter(Boolean).join(" ").trim() || null;
+    const melFirstName = data.firstName?.trim() || null;
+    const melLastName = data.lastName?.trim() || null;
+    const melAge = data.age != null && data.age >= 0 && data.age <= 150 ? data.age : null;
+
     const client = await db.pool.connect();
     try {
       const melRow = await client.query<{ accountID: number }>(
-        `INSERT INTO mel."UserAccount" ("eMailAddress", "hashPassword", "MEL_member")
-         VALUES ($1, $2, $3)
+        `INSERT INTO mel."UserAccount" ("eMailAddress", "hashPassword", "MEL_member", "firstName", "lastName", age)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING "accountID"`,
-        [emailNorm, hashed, isMelMember]
+        [emailNorm, hashed, isMelMember, melFirstName, melLastName, melAge]
       );
       const melAccountId = melRow.rows[0]?.accountID;
       if (melAccountId == null) throw new Error("UserAccount MEL insert failed");
@@ -91,7 +96,7 @@ export const userService = {
       await client.query(
         `INSERT INTO users (id, email, password, name, role, mel_account_id)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [id, emailNorm, hashed, data.name ?? null, role, melAccountId]
+        [id, emailNorm, hashed, displayName, role, melAccountId]
       );
     } finally {
       client.release();

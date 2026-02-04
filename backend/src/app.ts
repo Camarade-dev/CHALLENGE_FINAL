@@ -3,8 +3,10 @@
  */
 
 import express from "express";
+import path from "path";
 import cors from "cors";
 import routes from "./routes";
+import uploadRouter from "./routes/upload";
 import { errorHandler } from "./middlewares/errorHandler";
 
 const app = express();
@@ -17,6 +19,8 @@ app.use(
 );
 app.use(express.json());
 
+app.use("/api/upload", uploadRouter);
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/api", routes);
 
 // 404

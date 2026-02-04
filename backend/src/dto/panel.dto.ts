@@ -35,7 +35,15 @@ export const checkPanelSchema = z.object({
   body: z.object({
     state: checkStateEnum,
     comment: z.string().max(2000).optional(),
-    photoUrl: z.string().url().optional().nullable(),
+    photoUrl: z
+      .string()
+      .optional()
+      .nullable()
+      .refine(
+        (v) => !v || v.trim() === "" || v.startsWith("/") || v.startsWith("http://") || v.startsWith("https://"),
+        { message: "URL ou chemin invalide" }
+      )
+      .transform((v) => (v && v.trim() !== "" ? v.trim() : null)),
   }),
 });
 

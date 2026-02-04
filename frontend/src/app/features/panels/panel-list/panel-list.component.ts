@@ -1,9 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { Panel } from '../../../core/services/panel.service';
 
 @Component({
   selector: 'app-panel-list',
   standalone: true,
+  imports: [DecimalPipe],
   template: `
     <h2>Panneaux à contrôler</h2>
     @if (loading) {

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { PanelService, PendingCheck } from '../../../core/services/panel.service';
 
 const STATE_LABELS: Record<string, string> = {
@@ -34,7 +35,7 @@ const STATE_LABELS: Record<string, string> = {
                   <p class="comment">{{ c.comment }}</p>
                 }
                 @if (c.photoUrl) {
-                  <a [href]="c.photoUrl" target="_blank" rel="noopener" class="photo-link">Voir la photo</a>
+                  <button type="button" class="photo-link" (click)="showPhoto(c.photoUrl!)">Voir la photo</button>
                 }
               </div>
               <button
@@ -50,6 +51,15 @@ const STATE_LABELS: Record<string, string> = {
         </ul>
       }
     </div>
+
+    @if (photoModalUrl) {
+      <div class="photo-overlay" (click)="closePhoto()">
+        <div class="photo-modal" (click)="$event.stopPropagation()">
+          <img [src]="photoModalUrl" alt="Photo du contrôle" />
+          <button type="button" class="close-btn" (click)="closePhoto()">Fermer</button>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .pending-page { max-width: 640px; margin: 0 auto; padding: 1rem; }
@@ -74,7 +84,47 @@ const STATE_LABELS: Record<string, string> = {
     .meta { font-size: 0.875rem; color: #666; }
     .state { font-size: 0.875rem; }
     .comment { margin: 0.5rem 0 0; font-size: 0.875rem; color: #374151; white-space: pre-wrap; }
-    .photo-link { font-size: 0.875rem; color: #7c3aed; }
+    .photo-link {
+      font-size: 0.875rem;
+      color: #7c3aed;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .photo-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .photo-modal {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .photo-modal img {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+    .photo-modal .close-btn {
+      padding: 0.5rem 1rem;
+      background: #e5e7eb;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
     .btn-validate {
       padding: 0.5rem 1rem;
       background: #059669;
@@ -93,8 +143,32 @@ export class PendingChecksComponent implements OnInit {
   checks: PendingCheck[] = [];
   loading = true;
   validatingId: string | null = null;
+  photoModalUrl: SafeUrl | null = null;
 
-  constructor(private panelService: PanelService) {}
+  constructor(
+    private panelService: PanelService,
+    private sanitizer: DomSanitizer
+  ) {}
+
+  showPhoto(url: string): void {
+    // Toujours afficher via la même origine (chemin relatif) pour passer par le proxy
+    const path = this.toPhotoPath(url);
+    this.photoModalUrl = this.sanitizer.bypassSecurityTrustResourceUrl(path);
+  }
+
+  /** Convertit une URL complète ou un chemin en chemin relatif pour le chargement. */
+  private toPhotoPath(url: string): string {
+    if (!url) return url;
+    if (url.startsWith('http') && url.includes('/uploads/')) {
+      const match = url.match(/\/uploads\/[\s\S]+/);
+      return match ? match[0] : url;
+    }
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+
+  closePhoto(): void {
+    this.photoModalUrl = null;
+  }
 
   ngOnInit(): void {
     this.load();

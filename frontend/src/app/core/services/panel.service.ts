@@ -22,8 +22,17 @@ interface ApiResponse<T> {
 @Injectable({ providedIn: 'root' })
 export class PanelService {
   private readonly baseUrl = `${environment.apiUrl}/panels`;
+  private readonly uploadUrl = `${environment.apiUrl}/upload/check-photo`;
 
   constructor(private http: HttpClient) {}
+
+  uploadCheckPhoto(file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return this.http
+      .post<ApiResponse<{ url: string }>>(this.uploadUrl, formData)
+      .pipe(map((res) => res.data));
+  }
 
   getAll(): Observable<Panel[]> {
     return this.http
