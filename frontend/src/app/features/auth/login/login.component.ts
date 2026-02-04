@@ -35,6 +35,7 @@ import { AuthService } from '../../../core/services/auth.service';
       background: #fff;
       border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border: 2px solid black;
     }
     h1 { margin: 0 0 1rem; font-size: 1.5rem; }
     .error { color: #b91c1c; font-size: 0.875rem; margin-bottom: 0.5rem; }
