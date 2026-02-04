@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { PanelService, Panel } from '../../../core/services/panel.service';
@@ -7,12 +6,11 @@ import { PanelService, Panel } from '../../../core/services/panel.service';
 @Component({
   selector: 'app-panel-management',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe],
   template: `
     <div class="management">
       <div class="top">
         <h1>Gestion des panneaux</h1>
-        <a routerLink="/" class="back">Retour à la carte</a>
       </div>
 
       <section class="form-section">

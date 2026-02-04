@@ -1,5 +1,6 @@
 /**
  * UserService : création et recherche d'utilisateurs (auth).
+ * Crée et lie un compte mel."UserAccount" à chaque utilisateur (mel_account_id).
  */
 
 import { randomUUID } from "crypto";
@@ -14,7 +15,7 @@ const SALT_ROUNDS = 10;
 export const userService = {
   async findByEmail(email: string): Promise<User | null> {
     const row = await db.queryOne<Record<string, unknown>>(
-      `SELECT id, email, password, name, role, created_at, updated_at
+      `SELECT id, email, password, name, role, created_at, updated_at, mel_account_id
        FROM users WHERE email = $1`,
       [email.toLowerCase().trim()]
     );
@@ -27,12 +28,13 @@ export const userService = {
       role: row.role as "USER" | "ADMIN",
       createdAt: row.created_at as Date,
       updatedAt: row.updated_at as Date,
+      melAccountId: row.mel_account_id as number | null ?? undefined,
     };
   },
 
-  async findById(id: string): Promise<(UserPublic & { role: string }) | null> {
+  async findById(id: string): Promise<(UserPublic & { role: string; melAccountId?: number | null }) | null> {
     const row = await db.queryOne<Record<string, unknown>>(
-      `SELECT id, email, name, role FROM users WHERE id = $1`,
+      `SELECT id, email, name, role, mel_account_id FROM users WHERE id = $1`,
       [id]
     );
     if (!row) return null;
@@ -41,7 +43,28 @@ export const userService = {
       email: row.email as string,
       name: row.name as string | null,
       role: row.role as string,
+      melAccountId: row.mel_account_id != null ? (row.mel_account_id as number) : null,
     };
+  },
+
+  /** Retourne l'ID du compte MEL (mel."UserAccount"."accountID") pour l'utilisateur, ou null. */
+  async getMelAccountId(userId: string): Promise<number | null> {
+    const row = await db.queryOne<Record<string, unknown>>(
+      `SELECT mel_account_id FROM users WHERE id = $1`,
+      [userId]
+    );
+    const id = row?.mel_account_id;
+    return id != null ? (id as number) : null;
+  },
+
+  /** Met à jour MEL_member pour le compte MEL de l'utilisateur (ex: promotion admin). */
+  async setMelMember(userId: string, melMember: boolean): Promise<void> {
+    const melId = await this.getMelAccountId(userId);
+    if (melId == null) return;
+    await db.query(
+      `UPDATE mel."UserAccount" SET "MEL_member" = $1 WHERE "accountID" = $2`,
+      [melMember, melId]
+    );
   },
 
   async create(data: RegisterDto, role: "USER" | "ADMIN" = "USER"): Promise<UserPublic & { role: string }> {
@@ -51,14 +74,32 @@ export const userService = {
     }
     const id = randomUUID();
     const hashed = await bcrypt.hash(data.password, SALT_ROUNDS);
-    await db.query(
-      `INSERT INTO users (id, email, password, name, role)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [id, data.email.toLowerCase().trim(), hashed, data.name ?? null, role]
-    );
+    const emailNorm = data.email.toLowerCase().trim();
+    const isMelMember = role === "ADMIN";
+
+    const client = await db.pool.connect();
+    try {
+      const melRow = await client.query<{ accountID: number }>(
+        `INSERT INTO mel."UserAccount" ("eMailAddress", "hashPassword", "MEL_member")
+         VALUES ($1, $2, $3)
+         RETURNING "accountID"`,
+        [emailNorm, hashed, isMelMember]
+      );
+      const melAccountId = melRow.rows[0]?.accountID;
+      if (melAccountId == null) throw new Error("UserAccount MEL insert failed");
+
+      await client.query(
+        `INSERT INTO users (id, email, password, name, role, mel_account_id)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [id, emailNorm, hashed, data.name ?? null, role, melAccountId]
+      );
+    } finally {
+      client.release();
+    }
+
     const user = await this.findById(id);
     if (!user) throw new Error("User not found after create");
-    return user;
+    return { id: user.id, email: user.email, name: user.name, role };
   },
 
   async verifyPassword(email: string, password: string): Promise<User> {

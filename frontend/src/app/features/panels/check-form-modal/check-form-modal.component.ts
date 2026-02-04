@@ -1,11 +1,9 @@
-import { Component, EventEmitter, Input, Output, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Panel } from '../../../core/services/panel.service';
 
-export type CheckState = 'OK' | 'DAMAGED' | 'MISSING' | 'OTHER';
-
 export interface CheckFormValue {
-  state: CheckState;
+  state: string;
   comment?: string;
   photoUrl?: string | null;
 }
@@ -16,13 +14,13 @@ export interface CheckFormValue {
   imports: [FormsModule],
   template: `
     @if (panel) {
-      <div class="overlay" (click)="cancel()">
-        <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="check-title">
-          <h2 id="check-title">Contrôle du panneau : {{ panel.name }}</h2>
+      <div class="overlay" (click)="cancelClick.emit()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <h3>Contrôle : {{ panel.name }}</h3>
           <form (ngSubmit)="onSubmit()" #f="ngForm">
             <label>
-              État du panneau <span class="required">*</span>
-              <select name="state" [(ngModel)]="state" required>
+              État du panneau
+              <select name="state" [(ngModel)]="form.state" required>
                 <option value="OK">Bon</option>
                 <option value="DAMAGED">Endommagé</option>
                 <option value="MISSING">Absent</option>
@@ -31,15 +29,17 @@ export interface CheckFormValue {
             </label>
             <label>
               Commentaire (optionnel)
-              <textarea name="comment" [(ngModel)]="comment" rows="3" placeholder="Décrivez l'état observé..."></textarea>
+              <textarea name="comment" [(ngModel)]="form.comment" rows="3"></textarea>
             </label>
             <label>
-              URL de la photo (optionnel)
-              <input type="url" name="photoUrl" [(ngModel)]="photoUrl" placeholder="https://..." />
+              URL photo (optionnel)
+              <input type="url" name="photoUrl" [(ngModel)]="form.photoUrl" />
             </label>
             <div class="actions">
-              <button type="button" class="btn-cancel" (click)="cancel()">Annuler</button>
-              <button type="submit" [disabled]="f.invalid || sending">{{ sending ? 'Envoi...' : 'Soumettre le contrôle' }}</button>
+              <button type="submit" [disabled]="f.invalid || sending">
+                {{ sending ? 'Envoi…' : 'Envoyer' }}
+              </button>
+              <button type="button" class="cancel" (click)="cancelClick.emit()">Annuler</button>
             </div>
           </form>
         </div>
@@ -55,83 +55,48 @@ export interface CheckFormValue {
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      padding: 1rem;
     }
     .modal {
       background: #fff;
-      border-radius: 12px;
       padding: 1.5rem;
-      max-width: 440px;
-      width: 100%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      min-width: 320px;
+      max-width: 90vw;
     }
-    h2 {
-      margin: 0 0 1rem;
-      font-size: 1.25rem;
-      color: #1a1a2e;
-    }
-    .required { color: #b91c1c; }
-    label {
+    .modal h3 { margin: 0 0 1rem; font-size: 1.1rem; }
+    .modal label {
       display: block;
       margin-bottom: 1rem;
     }
-    label select, label textarea, label input {
+    .modal label select,
+    .modal label textarea,
+    .modal label input {
+      display: block;
       width: 100%;
-      padding: 0.5rem;
       margin-top: 0.25rem;
+      padding: 0.5rem;
       box-sizing: border-box;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-family: inherit;
     }
-    label textarea { resize: vertical; min-height: 60px; }
-    .actions {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1.25rem;
-    }
-    .actions button {
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-size: 0.9375rem;
-      cursor: pointer;
-      border: none;
-    }
-    .actions button[type="submit"] {
-      background: #7c3aed;
-      color: #fff;
-    }
-    .actions button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
-    .btn-cancel { background: #e5e7eb; color: #374151; }
+    .actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+    .actions button { padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; border: none; }
+    .actions button[type="submit"] { background: #059669; color: #fff; }
+    .actions button.cancel { background: #e5e7eb; color: #374151; }
   `],
 })
-export class CheckFormModalComponent implements OnChanges {
+export class CheckFormModalComponent {
   @Input() panel: Panel | null = null;
   @Input() sending = false;
   @Output() submitCheck = new EventEmitter<CheckFormValue>();
   @Output() cancelClick = new EventEmitter<void>();
 
-  state: CheckState = 'OK';
-  comment = '';
-  photoUrl: string | null = null;
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['panel'] && this.panel) {
-      this.state = 'OK';
-      this.comment = '';
-      this.photoUrl = null;
-    }
-  }
-
-  cancel(): void {
-    this.cancelClick.emit();
-  }
+  form: CheckFormValue = { state: 'OK', comment: '', photoUrl: null };
 
   onSubmit(): void {
     this.submitCheck.emit({
-      state: this.state,
-      comment: this.comment || undefined,
-      photoUrl: this.photoUrl || undefined,
+      state: this.form.state,
+      comment: this.form.comment || undefined,
+      photoUrl: this.form.photoUrl || null,
     });
+    this.form = { state: 'OK', comment: '', photoUrl: null };
   }
 }

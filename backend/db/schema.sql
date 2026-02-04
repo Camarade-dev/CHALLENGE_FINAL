@@ -6,13 +6,14 @@
 -- Utilisateurs
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
-  id         TEXT PRIMARY KEY,
-  email      TEXT NOT NULL UNIQUE,
-  password   TEXT NOT NULL,
-  name       TEXT,
-  role       TEXT NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id              TEXT PRIMARY KEY,
+  email           TEXT NOT NULL UNIQUE,
+  password        TEXT NOT NULL,
+  name            TEXT,
+  role            TEXT NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN')),
+  mel_account_id  INTEGER,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -69,3 +70,7 @@ CREATE TABLE IF NOT EXISTS panel_checks (
 CREATE INDEX IF NOT EXISTS idx_panel_checks_panel_id ON panel_checks(panel_id);
 CREATE INDEX IF NOT EXISTS idx_panel_checks_checked_at ON panel_checks(checked_at);
 CREATE INDEX IF NOT EXISTS idx_panel_checks_status ON panel_checks(status);
+
+-- ---------------------------------------------------------------------------
+-- Schéma MEL (collègue) : voir schema_mel.sql (tables dans le schéma "mel")
+-- ---------------------------------------------------------------------------

@@ -17,6 +17,7 @@ export interface User {
   role: Role;
   createdAt: Date;
   updatedAt: Date;
+  melAccountId?: number | null;
 }
 
 export interface UserPublic {
@@ -69,4 +70,48 @@ export interface PanelCheck {
 export interface PanelCheckWithDetails extends PanelCheck {
   panelName: string;
   userEmail: string;
+}
+
+// --- Schéma MEL ---
+
+export interface MelLocalisation {
+  lat: number;
+  lon: number;
+}
+
+export interface MelUserAccount {
+  accountID: number;
+  eMailAddress: string;
+  MEL_member: boolean;
+  pointsTotal: number;
+}
+
+export interface MelProperty {
+  localisation: MelLocalisation;
+  lastReport: Date;
+  naturalSpace: boolean;
+  pointsValue: number;
+  numberOfSigns: number;
+  creator: number;
+}
+
+export interface MelSignType {
+  signType: string;
+}
+
+export interface MelSign {
+  signID: number;
+  tagged: boolean;
+  deterioratedInfo: boolean;
+  hiddenByEnvironment: boolean;
+  standing: boolean;
+  present: boolean;
+  componentTotal: number;
+  signType: string;
+  localisation: MelLocalisation;
+}
+
+export interface MelReport {
+  userAccount: number;
+  melProperty: MelLocalisation;
 }

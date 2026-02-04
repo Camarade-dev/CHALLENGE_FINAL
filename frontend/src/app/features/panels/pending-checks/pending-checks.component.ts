@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { PanelService, PendingCheck } from '../../../core/services/panel.service';
 
@@ -13,12 +12,11 @@ const STATE_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-pending-checks',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [DatePipe],
   template: `
     <div class="pending-page">
       <div class="top">
         <h1>Contrôles en attente de validation</h1>
-        <a routerLink="/" class="back">Retour à la carte</a>
       </div>
       @if (loading) {
         <p>Chargement…</p>

@@ -9,16 +9,13 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <nav class="navbar">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="brand">
-        Panneaux de la ville
+        Signalisation MEL
       </a>
       <ul class="nav-links">
         @if (auth.isLoggedIn()) {
+          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Carte & Liste</a></li>
           @if (auth.isAdmin()) {
-            <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Carte & Liste</a></li>
-            <li><a routerLink="/admin/pending-checks" routerLinkActive="active">Contrôles en attente</a></li>
-            <li><a routerLink="/admin/panels" routerLinkActive="active">Gestion panneaux</a></li>
-          } @else {
-            <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Carte & Panneaux à contrôler</a></li>
+            <li><a routerLink="/admin" routerLinkActive="active">Administration</a></li>
           }
           <li class="user">
             <span class="email">{{ auth.currentUser()?.email }}</span>
