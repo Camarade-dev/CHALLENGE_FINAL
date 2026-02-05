@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
     <nav class="navbar">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="brand">
@@ -14,10 +15,16 @@ import { AuthService } from '../../core/services/auth.service';
       <ul class="nav-links">
         @if (auth.isLoggedIn()) {
           <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Carte & Liste</a></li>
+          <li><a routerLink="/rewards" routerLinkActive="active">Récompenses</a></li>
           @if (auth.isAdmin()) {
             <li><a routerLink="/admin" routerLinkActive="active">Administration</a></li>
           }
           <li class="user">
+            @if (auth.currentUser()?.points != null) {
+              <a routerLink="/rewards" class="points-badge" title="Voir mes récompenses">
+                {{ auth.currentUser()!.points | number }} pts
+              </a>
+            }
             <span class="email">{{ auth.currentUser()?.email }}</span>
             <button type="button" class="btn-logout" (click)="auth.logout()">Déconnexion</button>
           </li>
@@ -74,6 +81,15 @@ import { AuthService } from '../../core/services/auth.service';
       font-size: 0.875rem;
     }
     .btn-logout:hover { color: #ffffff; border-color: #777; }
+    .points-badge {
+      padding: 0.25rem 0.5rem;
+      background: rgba(5, 150, 105, 0.3);
+      color: #fff;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      text-decoration: none;
+    }
+    .points-badge:hover { background: rgba(5, 150, 105, 0.5); }
   `],
 })
 export class NavbarComponent {

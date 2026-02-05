@@ -1,5 +1,6 @@
 /**
- * AuthController : inscription, connexion, profil.
+ * AuthController : inscription, connexion, profil, déconnexion.
+ * Utilise un cookie HttpOnly pour la session.
  */
 
 import { Request, Response } from "express";
@@ -7,6 +8,7 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler";
 import { userService } from "../services/userService";
 import { config } from "../config";
+import { setSessionCookie, clearSessionCookie } from "../utils/sessionCookie";
 import { registerSchema, loginSchema } from "../dto/auth.dto";
 import { validate } from "../middlewares/validate";
 import type { JwtPayload } from "../middlewares/auth";
@@ -18,9 +20,10 @@ async function register(req: Request, res: Response): Promise<void> {
     config.jwt.secret,
     { expiresIn: config.jwt.expiresIn }
   );
+  setSessionCookie(res, token);
   res.status(201).json({
     success: true,
-    data: { user: { id: user.id, email: user.email, name: user.name, role: "USER" }, token },
+    data: { user: { id: user.id, email: user.email, name: user.name, role: "USER" } },
   });
 }
 
@@ -31,13 +34,18 @@ async function login(req: Request, res: Response): Promise<void> {
     config.jwt.secret,
     { expiresIn: config.jwt.expiresIn }
   );
+  setSessionCookie(res, token);
   res.json({
     success: true,
     data: {
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
-      token,
     },
   });
+}
+
+async function logout(_req: Request, res: Response): Promise<void> {
+  clearSessionCookie(res);
+  res.json({ success: true, message: "Déconnecté" });
 }
 
 async function me(req: Request, res: Response): Promise<void> {
@@ -55,6 +63,7 @@ async function me(req: Request, res: Response): Promise<void> {
 export const authController = {
   register: asyncHandler(register),
   login: asyncHandler(login),
+  logout: asyncHandler(logout),
   me: asyncHandler(me),
 };
 

@@ -1,22 +1,22 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-const TOKEN_KEY = 'panneaux_token';
-
 export interface AuthUser {
   id: string;
   email: string;
   name: string | null;
   role: 'USER' | 'ADMIN';
+  points?: number;
 }
 
 interface LoginResponse {
   success: boolean;
-  data: { user: AuthUser; token: string };
+  data: { user: AuthUser };
 }
 
 interface MeResponse {
@@ -28,75 +28,71 @@ interface MeResponse {
 export class AuthService {
   private readonly baseUrl = `${environment.apiUrl}/auth`;
   private currentUserSignal = signal<AuthUser | null>(null);
+  private authReadySignal = signal(false);
 
   readonly currentUser = this.currentUserSignal.asReadonly();
   readonly isLoggedIn = computed(() => this.currentUserSignal() !== null);
   readonly isAdmin = computed(() => this.currentUserSignal()?.role === 'ADMIN');
+  /** true une fois que loadUser a terminé (succès ou erreur). */
+  readonly authReady = this.authReadySignal.asReadonly();
+
+  private readonly platformId = inject(PLATFORM_ID);
+  private get isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
 
   constructor(
     private http: HttpClient,
     private router: Router
   ) {
+    if (this.isBrowser) {
+      this.loadUser();
+    } else {
+      this.authReadySignal.set(true);
+    }
+  }
+
+  /** Attend que l'état d'auth soit résolu (utile pour le guard). */
+  waitForAuth(): Promise<boolean> {
+    if (this.authReadySignal()) return Promise.resolve(this.currentUserSignal() !== null);
+    return new Promise((resolve) => {
+      const check = () => {
+        if (this.authReadySignal()) {
+          resolve(this.currentUserSignal() !== null);
+        } else {
+          setTimeout(check, 50);
+        }
+      };
+      check();
+    });
+  }
+
+  /** Le token est dans un cookie HttpOnly : pas accessible en JS. Les requêtes avec withCredentials envoient le cookie automatiquement. */
+  getToken(): string | null {
+    return null;
+  }
+
+  /** Recharge l'utilisateur depuis l'API (ex. après attribution ou échange de points). */
+  refreshUser(): void {
     this.loadUser();
   }
 
-  getToken(): string | null {
-    return typeof localStorage !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null;
-  }
-
-  private setToken(token: string): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(TOKEN_KEY, token);
-    }
-  }
-
-  private clearToken(): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(TOKEN_KEY);
-    }
-  }
-
-  loadUser(): void {
-    const token = this.getToken();
-    if (!token) {
-      this.currentUserSignal.set(null);
-      return;
-    }
-    const decoded = this.decodeToken(token);
-    if (decoded) {
-      this.currentUserSignal.set({
-        id: decoded.userId,
-        email: decoded.email,
-        name: null,
-        role: decoded.role === 'ADMIN' ? 'ADMIN' : 'USER',
-      });
-    }
+  private loadUser(): void {
+    this.authReadySignal.set(false);
     this.http.get<MeResponse>(`${this.baseUrl}/me`).subscribe({
       next: (res) => {
         if (res.success && res.data.user) {
           this.currentUserSignal.set(res.data.user as AuthUser);
         } else {
-          this.clearToken();
           this.currentUserSignal.set(null);
         }
+        this.authReadySignal.set(true);
       },
       error: () => {
-        this.clearToken();
         this.currentUserSignal.set(null);
+        this.authReadySignal.set(true);
       },
     });
-  }
-
-  private decodeToken(token: string): { userId: string; email: string; role: string } | null {
-    try {
-      const payload = token.split('.')[1];
-      if (!payload) return null;
-      const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-      const data = JSON.parse(json) as { userId?: string; email?: string; role?: string };
-      return data?.userId && data?.email ? { userId: data.userId, email: data.email, role: data.role || 'USER' } : null;
-    } catch {
-      return null;
-    }
   }
 
   register(
@@ -110,7 +106,6 @@ export class AuthService {
       .pipe(
         tap((res) => {
           if (res.success) {
-            this.setToken(res.data.token);
             this.currentUserSignal.set(res.data.user as AuthUser);
           }
         }),
@@ -124,7 +119,6 @@ export class AuthService {
       .pipe(
         tap((res) => {
           if (res.success) {
-            this.setToken(res.data.token);
             this.currentUserSignal.set(res.data.user as AuthUser);
           }
         }),
@@ -133,7 +127,7 @@ export class AuthService {
   }
 
   logout(): void {
-    this.clearToken();
+    this.http.post(`${this.baseUrl}/logout`, {}).subscribe();
     this.currentUserSignal.set(null);
     this.router.navigate(['/login']);
   }

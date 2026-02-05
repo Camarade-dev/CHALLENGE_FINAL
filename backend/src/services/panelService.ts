@@ -130,7 +130,7 @@ export const panelService = {
     return rows.map((r) => r.panel_id as string);
   },
 
-  /** Valider un contrôle (admin) : status → VALIDATED et mise à jour last_checked_at du panneau. */
+  /** Valider un contrôle (admin) : attribution des points, status → VALIDATED, mise à jour last_checked_at. */
   async validateCheck(checkId: string): Promise<Panel> {
     const row = await db.queryOne<Record<string, unknown>>(
       `SELECT panel_id FROM panel_checks WHERE id = $1 AND status = 'PENDING'`,
@@ -138,14 +138,22 @@ export const panelService = {
     );
     if (!row) throw new NotFoundError("Contrôle en attente");
     const panelId = row.panel_id as string;
+
+    // 1. Attribuer les points AVANT de mettre à jour last_checked_at (utilise l'ancienneté actuelle)
+    const { rewardService } = await import("./rewardService");
+    await rewardService.attributePointsForValidatedCheck(checkId);
+
+    // 2. Valider le contrôle (status → VALIDATED)
     await db.query(
       `UPDATE panel_checks SET status = 'VALIDATED' WHERE id = $1`,
       [checkId]
     );
+    // 3. Mettre à jour last_checked_at du panneau
     await db.query(
       `UPDATE panels SET last_checked_at = NOW(), updated_at = NOW() WHERE id = $1`,
       [panelId]
     );
+
     return this.findById(panelId);
   },
 };

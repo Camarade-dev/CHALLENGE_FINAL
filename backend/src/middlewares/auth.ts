@@ -8,6 +8,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { UnauthorizedError } from "../utils/errors";
+import { SESSION_COOKIE_NAME } from "../utils/sessionCookie";
 
 export interface JwtPayload {
   userId: string;
@@ -29,7 +30,9 @@ export function authMiddleware(
   next: NextFunction
 ): void {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  const cookieToken = req.cookies?.[SESSION_COOKIE_NAME] ?? null;
+  const token = bearerToken ?? cookieToken;
 
   if (!token) {
     next(new UnauthorizedError("Token manquant"));

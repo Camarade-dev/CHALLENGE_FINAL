@@ -32,9 +32,9 @@ export const userService = {
     };
   },
 
-  async findById(id: string): Promise<(UserPublic & { role: string; melAccountId?: number | null }) | null> {
+  async findById(id: string): Promise<(UserPublic & { role: string; melAccountId?: number | null; points?: number }) | null> {
     const row = await db.queryOne<Record<string, unknown>>(
-      `SELECT id, email, name, role, mel_account_id FROM users WHERE id = $1`,
+      `SELECT id, email, name, role, mel_account_id, COALESCE(points, 0) AS points FROM users WHERE id = $1`,
       [id]
     );
     if (!row) return null;
@@ -44,6 +44,7 @@ export const userService = {
       name: row.name as string | null,
       role: row.role as string,
       melAccountId: row.mel_account_id != null ? (row.mel_account_id as number) : null,
+      points: row.points != null ? Number(row.points) : 0,
     };
   },
 
